@@ -5,52 +5,23 @@ using UnityEngine.Events;
 
 namespace BNG {
 
-    /// <summary>
-    /// An example weapon script that can fire Raycasts or Projectile objects
-    /// </summary>
     public class RaycastWeapon : GrabbableEvents {
 
         [Header("General : ")]
-        /// <summary>
-        /// How far we can shoot in meters
-        /// </summary>
+        
         public float MaxRange = 25f;
-
-        /// <summary>
-        /// How much damage to apply to "Damageable" on contact
-        /// </summary>
         public float Damage = 25f;
-
-        /// <summary>
-        /// Semi requires user to press trigger repeatedly, Auto to hold down
-        /// </summary>
         [Tooltip("Semi requires user to press trigger repeatedly, Auto to hold down")]
         public FiringType FiringMethod = FiringType.Semi;
-
-        /// <summary>
-        /// How does the user reload once the Clip is Empty
-        /// </summary>
         public ReloadType ReloadMethod = ReloadType.InfiniteAmmo;
-
-        /// <summary>
-        /// Ex : 0.2 = 5 Shots per second
-        /// </summary>
         [Tooltip("Ex : 0.2 = 5 Shots per second")]
         public float FiringRate = 0.2f;
         float lastShotTime;
 
         [Tooltip("Amount of force to apply to a Rigidbody once damaged")]
         public float BulletImpactForce = 1000f;
-
-        /// <summary>
-        /// Maximum amount of internal ammo this weapon can hold. Does not account for attached clips.  For example, a shotgun has internal ammo
-        /// </summary>
         [Tooltip("Current Internal Ammo if you are keeping track of ammo yourself. Firing will deduct from this number. Reloading will cause this to equal MaxInternalAmmo.")]
         public float InternalAmmo = 0;
-
-        /// <summary>
-        /// Maximum amount of internal ammo this weapon can hold. Does not account for attached clips.  For example, a shotgun has internal ammo
-        /// </summary>
         [Tooltip("Maximum amount of internal ammo this weapon can hold. Does not account for attached clips.  For example, a shotgun has internal ammo")]
         public float MaxInternalAmmo = 10;
 
@@ -188,67 +159,37 @@ namespace BNG {
         /// </summary>
         [Tooltip("How far back to move the slide on fire")]
         public float SlideDistance = -0.028f;        
-
-        /// <summary>
-        /// Should the slide be forced back if we shoot the last bullet
-        /// </summary>
         [Tooltip("Should the slide be forced back if we shoot the last bullet")]
         public bool ForceSlideBackOnLastShot = true;
 
         [Tooltip("How fast to move back the slide on fire. Default : 1")]
         public float slideSpeed = 1;
-
-        /// <summary>
-        /// How close to the origin is considered valid.
-        /// </summary>
         float minSlideDistance = 0.001f;
-
         [Header("Inputs : ")]
         [Tooltip("Controller Input used to eject clip")]
         public List<GrabbedControllerBinding> EjectInput = new List<GrabbedControllerBinding>() { GrabbedControllerBinding.Button2Down };
-
         [Tooltip("Controller Input used to release the charging mechanism.")]
         public List<GrabbedControllerBinding> ReleaseSlideInput = new List<GrabbedControllerBinding>() { GrabbedControllerBinding.Button1Down };
-
         [Tooltip("Controller Input used to release reload the weapon if ReloadMethod = InternalAmmo.")]
         public List<GrabbedControllerBinding> ReloadInput = new List<GrabbedControllerBinding>() { GrabbedControllerBinding.Button2Down };
-
         [Header("Shown for Debug : ")]
-        /// <summary>
-        /// Is there currently a bullet chambered and ready to be fired
-        /// </summary>
         [Tooltip("Is there currently a bullet chambered and ready to be fired")]
         public bool BulletInChamber = false;
-
-        /// <summary>
-        /// Is there currently a bullet chambered and that must be ejected
-        /// </summary>
         [Tooltip("Is there currently a bullet chambered and that must be ejected")]
         public bool EmptyBulletInChamber = false;
-
         [Header("Events")]
-
         [Tooltip("Unity Event called when Shoot() method is successfully called")]
         public UnityEvent onShootEvent;
-
         [Tooltip("Unity Event called when something attaches ammo to the weapon")]
         public UnityEvent onAttachedAmmoEvent;
-
         [Tooltip("Unity Event called when something detaches ammo from the weapon")]
         public UnityEvent onDetachedAmmoEvent;
-
         [Tooltip("Unity Event called when the charging handle is successfully pulled back on the weapon")]
         public UnityEvent onWeaponChargedEvent;
-
         [Tooltip("Unity Event called when weapon damaged something")]
         public FloatEvent onDealtDamageEvent;
-
         [Tooltip("Passes along Raycast Hit info whenever a Raycast hit is successfully detected. Use this to display fx, add force, etc.")]
         public RaycastHitEvent onRaycastHitEvent;
-
-        /// <summary>
-        /// Is the slide / receiver forced back due to last shot
-        /// </summary>
         protected bool slideForcedBack = false;
 
         protected WeaponSlide ws;
@@ -734,15 +675,6 @@ namespace BNG {
         }
     }
 
-    public enum FiringType {
-        Semi,
-        Automatic
-    }
-
-    public enum ReloadType {
-        InfiniteAmmo,
-        ManualClip,
-        InternalAmmo
-    }
+    
 }
 
