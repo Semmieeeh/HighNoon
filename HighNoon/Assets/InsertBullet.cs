@@ -25,7 +25,7 @@ namespace BNG
                 if (grab.transform.name.Contains(AcceptBulletName))
                 {
 
-                    if(grab.GetComponent<Bullet>().fired == true || grab.GetComponent<Bullet>().canBeLoaded == false)
+                    if (grab.GetComponent<Bullet>().fired == true || grab.GetComponent<Bullet>().canBeLoaded == false)
                     {
                         return;
                     }
@@ -44,7 +44,7 @@ namespace BNG
                         b.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f); // Adjust scale if needed
                         b.GetComponent<Bullet>().canBeLoaded = false;
 
-                        Weapon.bullets[int.Parse(closestChamber.name)] = b.gameObject;
+                        Weapon.bullets[int.Parse(closestChamber.name) - 1] = b.gameObject.GetComponent<Bullet>();
                     }
 
                     // Play Sound
@@ -52,7 +52,7 @@ namespace BNG
                     {
                         VRUtils.Instance.PlaySpatialClipAt(InsertSound, transform.position, 1f, 0.5f);
                     }
-                    
+
                 }
             }
         }
@@ -64,6 +64,25 @@ namespace BNG
             GameObject closestChamber = null;
             float closestDistance = Mathf.Infinity;
 
+            // Check if all chambers are full
+            bool allChambersFull = true;
+            foreach (GameObject chamber in chambers)
+            {
+                if (chamber.transform.childCount == 0) // Check for empty chambers
+                {
+                    allChambersFull = false;
+                    break;
+                }
+            }
+
+            // If all chambers are full, return null early
+            if (allChambersFull)
+            {
+                Debug.Log("All chambers are full. Cannot insert any more bullets.");
+                return null;
+            }
+
+            // Continue to find the closest available chamber
             while (chambers.Count > 0)
             {
                 foreach (GameObject chamber in chambers)
@@ -88,7 +107,7 @@ namespace BNG
                 }
                 else
                 {
-                    // If no available chamber found, remove all checked chambers and search again
+                    // Remove the closestChamber from the list to avoid looping forever
                     chambers.Remove(closestChamber);
                 }
             }

@@ -10,5 +10,13 @@ namespace BNG {
         public bool ejected;
         public GameObject bulletObj;
 
+        private void OnTriggerExit(Collider other)
+        {
+            GetComponent<BoxCollider>().isTrigger = false;
+        }
+
     }
+
+
+    
 }

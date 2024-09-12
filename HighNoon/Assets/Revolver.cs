@@ -167,7 +167,7 @@ namespace BNG
         protected bool slideForcedBack = false;
         [Header("Chambers & Bullets")]
         public GameObject[] chambers; // Array of chamber positions
-        public GameObject[] bullets; // Array of bullet objects corresponding to chambers
+        public Bullet[] bullets; // Array of bullet objects corresponding to chambers
         public bool[] isBulletFired; // Array to track fired bullets
         protected WeaponSlide ws;
         public GameObject bulletPrefab;
@@ -191,7 +191,7 @@ namespace BNG
             isBulletFired = new bool[chambers.Length];
             for (int i = 0; i < isBulletFired.Length; i++)
             {
-                bullets[i] = chambers[i].transform.GetChild(0).gameObject;
+                bullets[i] = chambers[i].transform.GetChild(0).GetComponent<Bullet>();
                 isBulletFired[i] = false; // Initially, no bullets are fired
             }
 
@@ -217,7 +217,7 @@ namespace BNG
                     Bullet.transform.parent = chamber.transform;
                     Vector3 newScale = new Vector3(0.1f, 0.105f, 0.1f);
                     Bullet.transform.localScale = newScale;
-                    bullets[i] = Bullet.gameObject; i++;
+                    bullets[i] = Bullet.gameObject.GetComponent<Bullet>(); i++;
                     Bullet.GetComponent<Bullet>().canBeLoaded = false;
                     
 
@@ -271,62 +271,7 @@ namespace BNG
 
         public bool didShoot;
         public Transform Hammer;
-        public override void OnTrigger(float triggerValue)
-        {
-            // Sanitize for angles 
-            triggerValue = Mathf.Clamp01(triggerValue);
-            Debug.Log(triggerValue);
-            
-            // Update trigger graphics
-            if (TriggerTransform)
-            {
-                TriggerTransform.localEulerAngles = new Vector3(triggerValue * 15, 0, 0);
-            }
-
-            if (Hammer && didShoot ==false)
-            {
-                Hammer.localEulerAngles = new Vector3(triggerValue * -30, 0, 0);
-            }
-            else
-            {
-                Hammer.localEulerAngles = Vector3.zero;
-            }
-
-            // Trigger up, reset values
-            if (triggerValue <= 0.05f)
-            {
-                didShoot = false;
-                readyToShoot = true;
-                playedEmptySound = false;
-            }
-
-            // Rotate the object based on the triggerValue
-            if (ObjectToRotate && didShoot == false && locked)
-            {               
-
-                ObjectToRotate.localEulerAngles = new Vector3(OriginalEulers.x, OriginalEulers.y + triggerValue * 60, OriginalEulers.z);
-            }
-
-            if (readyToShoot && triggerValue >= 0.9f)
-            {
-                Shoot();
-
-                // Immediately ready to keep firing if in automatic mode
-                readyToShoot = FiringMethod == FiringType.Automatic;
-                OriginalEulers = new Vector3(OriginalEulers.x,OriginalEulers.y+60,OriginalEulers.z);
-                didShoot = true;
-                print(OriginalEulers);
-                ObjectToRotate.localEulerAngles = OriginalEulers;
-            }
-
-            // These are here for convenience. Could be called through GrabbableUnityEvents instead
-            checkSlideInput();
-            checkEjectInput();
-            CheckChamber();
-            updateChamberedBullet();
-
-            base.OnTrigger(triggerValue);
-        }
+        
 
 
     void checkSlideInput()
@@ -344,14 +289,25 @@ namespace BNG
 
         void checkEjectInput()
         {
+            bool inputDetected = false;
+
             // Check for bound controller button to eject magazine
             for (int x = 0; x < EjectInput.Count; x++)
             {
                 if (InputBridge.Instance.GetGrabbedControllerBinding(EjectInput[x], thisGrabber.HandSide))
                 {
-                    EjectMagazine();
+                    print("holding button!");
+                    inputDetected = true;
+                    EjectMagazine(true); // Call EjectMagazine only when input is detected
                     break;
                 }
+            }
+
+            // Do nothing if no input is detected
+            if (inputDetected ==false)
+            {
+                EjectMagazine(false);
+                return;
             }
         }
 
@@ -366,29 +322,29 @@ namespace BNG
 
 
         public Rigidbody cylinderRb;
-        public virtual void EjectMagazine()
+        public virtual void EjectMagazine(bool state)
         {
             // Create a new JointLimits struct and set the min value
             JointLimits limits = joint.limits;
             
-            if (locked == true)
+            if (state == true &&locked == true)
             {
                 joint.gameObject.GetComponent<Rigidbody>().mass = 10f;
                 cylinderRb.mass = 100;
                 limits.min = -90f;
+                locked = false;
                 
-                locked = !locked;
             }
-            else if( locked == false && EjectPointTransform.localEulerAngles.y < 20)
+            else if( state == false && locked == false && EjectPointTransform.localEulerAngles.y < 20)
             {
                 joint.gameObject.GetComponent<Rigidbody>().mass = 1f;
                 cylinderRb.mass = 0.1f;
-                
+                locked = true;
                 limits.min = 0f;
                 
-                locked = !locked;
             }
-            insert.canInsert = !locked;
+            
+            
             // Assign the modified limits struct back to the joint
             joint.limits = limits;
 
@@ -411,45 +367,133 @@ namespace BNG
             if (EjectPointTransform.localEulerAngles.y < 90)
             {
                 rotation = EjectPointTransform.localEulerAngles.y;
+
             }
             else if (EjectPointTransform.localEulerAngles.y > 90)
             {
                 rotation = EjectPointTransform.localEulerAngles.y- 360;
             }
-            print(rotation);
+            //print(rotation);
             if (locked == false && rotation < -60)
             {
+                
                 print("Ejecting now!");
 
-                foreach (GameObject b in bullets)
+                for (int i = 0; i < bullets.Length; i++) 
                 {
-                    Bullet a = b.GetComponent<Bullet>();
-
-                    if (a.fired == true)
+                    if (bullets[i] != null)
                     {
-                        b.transform.parent = null;
-                        Vector3 localBackward = new Vector3(0, -0.1f, 0);
-                        Vector3 ejectDirection = b.transform.TransformDirection(localBackward);
-                        Rigidbody rb = a.gameObject.GetComponent<Rigidbody>();
-                        rb.isKinematic = false;
-                        rb.AddForce(ejectDirection * ejectForce, ForceMode.Impulse);
-                        rb.GetComponent<CapsuleCollider>().enabled = true;
+                        if (bullets[i].fired == true)
+                        {
+                            Debug.LogError(i);
+                            Vector3 localBackward = new Vector3(0, -0.1f, 0);
+                            Vector3 ejectDirection = bullets[i].transform.TransformDirection(localBackward);
+                            Rigidbody rb = bullets[i].gameObject.GetComponent<Rigidbody>();
+                            rb.isKinematic = false;
+                            rb.AddForce(ejectDirection * ejectForce, ForceMode.Impulse);
+                            rb.GetComponent<CapsuleCollider>().enabled = true;
+                            bullets[i].transform.parent = null;
+                            bullets[i] = null;
+                        }
+                    }
+                    
+                }
+                foreach (Bullet b in bullets)
+                {
+                    if (b == null)
+                    {
+                        insert.canInsert = !locked;
+                        break; // Exit early since we found an empty bullet slot
+                    }
+                    else
+                    {
+                        insert.canInsert = false;
                     }
                 }
             }
+        }
+
+        public override void OnTrigger(float triggerValue)
+        {
+            // Sanitize for angles 
+            triggerValue = Mathf.Clamp01(triggerValue);
+            Debug.LogWarning(triggerValue);
+
+            // Update trigger graphics
+            if (TriggerTransform)
+            {
+                TriggerTransform.localEulerAngles = new Vector3(triggerValue * 15, 0, 0);
+            }
+
+            if (Hammer && didShoot == false)
+            {
+                Hammer.localEulerAngles = new Vector3(triggerValue * -30, 0, 0);
+            }
+            else
+            {
+                Hammer.localEulerAngles = Vector3.zero;
+            }
+
+            // Trigger up, reset values
+            if (triggerValue <= 0.05f)
+            {
+                didShoot = false;
+                readyToShoot = true;
+                playedEmptySound = false;
+            }
+            
+            // Rotate the object based on the triggerValue
+            if (ObjectToRotate && didShoot == false && locked)
+            {
+
+                ObjectToRotate.localEulerAngles = new Vector3(OriginalEulers.x, OriginalEulers.y + triggerValue * 60, OriginalEulers.z);
+            }
+            if(didShoot == true && locked)
+            {
+                ObjectToRotate.localEulerAngles = new Vector3(OriginalEulers.x, OriginalEulers.y, OriginalEulers.z);
+            }
+
+
+            if (readyToShoot && triggerValue >= 0.9f)
+            {
+                Shoot();
+
+                // Immediately ready to keep firing if in automatic mode
+                readyToShoot = FiringMethod == FiringType.Automatic;
+                OriginalEulers = new Vector3(OriginalEulers.x, OriginalEulers.y + 60, OriginalEulers.z);
+                didShoot = true;
+                //print(OriginalEulers);
+                ObjectToRotate.localEulerAngles = OriginalEulers;
+            }
+
+            // These are here for convenience. Could be called through GrabbableUnityEvents instead
+            checkSlideInput();
+            checkEjectInput();
+            CheckChamber();
+            updateChamberedBullet();
+
+            base.OnTrigger(triggerValue);
         }
         public virtual void Shoot()
         {
             CheckChamber();
             // Has enough time passed between shots
-            Bullet b = bullets[curChamber - 1 ].gameObject.GetComponent<Bullet>();
+            Bullet b;
+            if (bullets[curChamber - 1]!=null)
+            {
+                b = bullets[curChamber - 1].gameObject.GetComponent<Bullet>();
+            }
+            else
+            {
+                return;
+            }
             float shotInterval = Time.timeScale < 1 ? SlowMoRateOfFire : FiringRate;
             if (Time.time - lastShotTime < shotInterval)
             {
                 return;
             }
 
-            print(b.fired);
+            //print(b.fired);
             if (b.fired == false && locked == true)
             {
 
@@ -458,7 +502,6 @@ namespace BNG
                 b.bulletObj.SetActive(false);
                 b.fired = true;
                 isBulletFired[curChamber - 1] = b.fired;
-                bullets[curChamber - 1] = null;
                 // RotateChamber
                 if (Physics.Raycast(MuzzlePointTransform.position, MuzzlePointTransform.forward, out hit, MaxRange, ValidLayers, QueryTriggerInteraction.Ignore))
                 {
