@@ -12,7 +12,10 @@ namespace BNG {
 
         private void OnTriggerExit(Collider other)
         {
-            GetComponent<BoxCollider>().isTrigger = false;
+            if(other.tag == "Cylinder")
+            {
+                //GetComponent<Collider>().isTrigger = false;
+            }
         }
 
     }

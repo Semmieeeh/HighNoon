@@ -151,8 +151,36 @@ namespace BNG {
             else {
                 UpdateIdleState();
             }
+            CheckForChallenge();
         }
 
+        public GameObject finger;
+        RaycastHit hit;
+        void CheckForChallenge()
+        {
+            // Check if Grip, Point, and Thumb amounts match the condition
+            if (GripAmount == 1 && PointAmount == 1 && ThumbAmount == 0)
+            {
+                // Perform raycast in the direction of the finger's forward vector
+                if (Physics.Raycast(finger.transform.position, finger.transform.forward, out RaycastHit hit, 10))
+                {
+                    // Traverse up the hierarchy to find the topmost parent
+                    Transform current = hit.transform;
+                    while (current.parent != null)
+                    {
+                        current = current.parent;
+                    }
+
+                    // Check if the topmost parent has a CowboyEnemy script
+                    CowboyEnemy enemy = current.GetComponent<CowboyEnemy>();
+                    if (enemy != null)
+                    {
+                        // Increase the challenged value by 1f per second
+                        enemy.challengeValue += Time.deltaTime;
+                    }
+                }
+            }
+        }
         public virtual void UpdateHeldObjectState() {
             // Holding Animator Grabbable
             if (IsAnimatorGrabbable()) {

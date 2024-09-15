@@ -348,7 +348,10 @@ namespace BNG
                 limits.min = 0f;
                 foreach (Bullet b in bullets)
                 {
-                    b.GetComponent<Grabbable>().enabled = false;
+                    if (b != null)
+                    {
+                        b.GetComponent<Grabbable>().enabled = false;
+                    }
                 }
 
             }
@@ -585,9 +588,24 @@ namespace BNG
         {
 
             ApplyParticleFX(hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal), hit.collider);
+            
+            // Traverse up the hierarchy to find the topmost parent
+            Transform current = hit.transform;
+            Rigidbody hitRigid = hit.collider.attachedRigidbody;
+            while (current.parent != null)
+            {
+                current = current.parent;
+            }
+            CowboyEnemy enemy = current.GetComponent<CowboyEnemy>();
+            if (enemy != null)
+            {
+                
+                enemy.Shot(BulletImpactForce, MuzzlePointTransform, hit, hitRigid);
+            }
+
 
             // push object if rigidbody
-            Rigidbody hitRigid = hit.collider.attachedRigidbody;
+            
             if (hitRigid != null)
             {
                 hitRigid.AddForceAtPosition(BulletImpactForce * MuzzlePointTransform.forward, hit.point);
