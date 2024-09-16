@@ -154,7 +154,7 @@ MonoBehaviour:
   targetPos: {x: 0, y: 0, z: 0}
   walkspeed: 1.5
   sprintSpeed: 3
-  walkingDistance: 3
+  walkingDistance: 10
   distanceTolerance: 0.1
   shookHands: 0
   ragdollParts:
@@ -171,9 +171,12 @@ MonoBehaviour:
   - {fileID: 2493769404140048604}
   ragdoll: 0
   challenged: 0
+  challengeValue: 0
   spawn: {fileID: 0}
   playerSpot: {fileID: 0}
+  reactionTime: 0
   behaviour: 0
+  counted: 0
 --- !u!195 &178276229770994188
 NavMeshAgent:
   m_ObjectHideFlags: 0

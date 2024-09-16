@@ -36,6 +36,7 @@ public class CowboyEnemy : MonoBehaviour
     public float challengeValue;
     public SpawnEnemy spawn;
     public Transform playerSpot;
+    public float reactionTime;
 
 
 
@@ -68,6 +69,7 @@ public class CowboyEnemy : MonoBehaviour
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
         targetPos = transform.position;
+        reactionTime = 2-difficulty;
 
     }
 
@@ -210,7 +212,12 @@ public class CowboyEnemy : MonoBehaviour
                 {
                     if(counted == true)
                     {
-                        behaviour = Behaviour.Dueling;
+                        reactionTime -= 1 * Time.deltaTime;
+                        if(reactionTime <= 0)
+                        {
+                            behaviour = Behaviour.Dueling;
+                        }
+                        
                     }
                     Vector3 direction2 = player.transform.position - transform.position;
                     direction2.y = 0;  // Ignore the Y-axis to avoid tilting forward or backward

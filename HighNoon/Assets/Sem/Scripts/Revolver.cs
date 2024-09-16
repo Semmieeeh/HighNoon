@@ -336,7 +336,10 @@ namespace BNG
                 locked = false;
                 foreach(Bullet b in bullets)
                 {
-                    b.GetComponent<Grabbable>().enabled = true;
+                    if (b != null)
+                    {
+                        b.GetComponent<Grabbable>().enabled = true;
+                    }
                 }
                 
             }
@@ -397,7 +400,6 @@ namespace BNG
                     {
                         if (bullets[i].fired == true)
                         {
-                            Debug.LogError(i);
                             Vector3 localBackward = new Vector3(0, -0.1f, 0);
                             Vector3 ejectDirection = bullets[i].transform.TransformDirection(localBackward);
                             Rigidbody rb = bullets[i].gameObject.GetComponent<Rigidbody>();
