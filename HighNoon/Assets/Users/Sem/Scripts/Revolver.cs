@@ -10,6 +10,9 @@ namespace BNG
     {
 
         [Header("General : ")]
+        public LineRenderer tracer;
+        public bool inHolster;
+        public bool canShoot;
         public bool shoot;
         public HingeJoint joint;
         public InsertBullet insert;
@@ -368,7 +371,10 @@ namespace BNG
 
         protected bool playedEmptySound = false;
         public float ejectForce;
+        public AudioClip[] holsterSound;
         private float rotation;
+        bool playedOutHolster;
+        bool playedInHolster;
         private void Update()
         {
             
@@ -376,6 +382,19 @@ namespace BNG
             {
                 Shoot();
                 shoot = false;
+            }
+
+            if (inHolster == true && playedInHolster == false)
+            {
+                playedInHolster = true;
+                playedOutHolster = false;
+                VRUtils.Instance.PlaySpatialClipAt(holsterSound[1], transform.position, 0.75f);
+            }
+            else if (inHolster == false && playedOutHolster == false)
+            {
+                playedInHolster = false;
+                playedOutHolster = true;
+                VRUtils.Instance.PlaySpatialClipAt(holsterSound[0], transform.position, 0.75f);
             }
 
 
@@ -429,6 +448,7 @@ namespace BNG
 
         public override void OnTrigger(float triggerValue)
         {
+            
             // Sanitize for angles 
             triggerValue = Mathf.Clamp01(triggerValue);
             Debug.LogWarning(triggerValue);
@@ -477,7 +497,7 @@ namespace BNG
                 OriginalEulers = new Vector3(OriginalEulers.x, OriginalEulers.y + 60, OriginalEulers.z);
                 didShoot = true;
                 //print(OriginalEulers);
-                ObjectToRotate.localEulerAngles = OriginalEulers;
+                
             }
 
             // These are here for convenience. Could be called through GrabbableUnityEvents instead
@@ -488,8 +508,37 @@ namespace BNG
 
             base.OnTrigger(triggerValue);
         }
+        public bool shotBeforeBell;
+
+        public AudioClip unjam;
+        public void UnJam()
+        {
+            VRUtils.Instance.PlaySpatialClipAt(unjam, transform.position, GunShotVolume);
+            shotBeforeBell = false;
+            invoked = false;
+        }
+        bool invoked;
         public virtual void Shoot()
         {
+            ObjectToRotate.localEulerAngles = OriginalEulers;
+            if (canShoot == false && inHolster == false)
+            {
+                if(invoked == false)
+                {
+                    CancelInvoke();
+                    Invoke("UnJam", 10f);               
+                    shotBeforeBell = true;
+                    invoked = true;
+                }
+                VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
+
+                return;
+            }
+            if(shotBeforeBell == true)
+            {
+                VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
+                return;
+            }
             CheckChamber();
             // Has enough time passed between shots
             Bullet b;
@@ -529,7 +578,6 @@ namespace BNG
             }
 
 
-            // Create our own spatial clip
             VRUtils.Instance.PlaySpatialClipAt(GunShotSound, transform.position, GunShotVolume);
 
             // Haptics

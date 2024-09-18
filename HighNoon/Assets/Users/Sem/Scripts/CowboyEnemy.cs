@@ -1,33 +1,39 @@
+using BNG;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.PerformanceData;
-using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.InputSystem.HID;
 
 public class CowboyEnemy : MonoBehaviour
 {
     [Header("General")]
     public float difficulty;
     public GameObject weapon;
+    public GameObject muzzleflash;
     public GameObject player;
+    public AudioClip GunShotSound;
+    public AudioClip AngrySound;
+    public AudioClip walkingSound;
+    public AudioClip fleshHitSound;
+
     [Header("Animation")]
     public Animator animator;
-    public AnimatorStateInfo stateInfo;
-    public bool walking;
-    public int walkState; //0 = stand still, 1 = walk, 2 = run
     public int state;
+    private AnimatorStateInfo stateInfo;
+    private bool walking;
+    private int walkState; // 0 = stand still, 1 = walk, 2 = run
+    
     [Header("Navigation")]
-    [HideInInspector]
     public Transform enemySpot;
     public Transform shakeSpot;
+    public Transform playerSpot;
     public Vector3 targetPos;
     public float walkspeed = 1.5f;
     public float sprintSpeed = 2.25f;
     public float walkingDistance = 10;
     public float distanceTolerance;
     private NavMeshAgent agent;
+
     [Header("State Progression")]
     public bool shookHands;
     public GameObject[] ragdollParts;
@@ -35,10 +41,7 @@ public class CowboyEnemy : MonoBehaviour
     public bool challenged;
     public float challengeValue;
     public SpawnEnemy spawn;
-    public Transform playerSpot;
     public float reactionTime;
-
-
 
     public enum Behaviour
     {
@@ -46,31 +49,64 @@ public class CowboyEnemy : MonoBehaviour
         Standoff,
         Dueling
     }
-
     public Behaviour behaviour;
 
+    private float extraRotationSpeed = 1000;
+    public bool counted;
+    public bool canShakeHands;
 
-
-    public void Shot(float BulletImpactForce, Transform MuzzlePointTransform, RaycastHit hit, Rigidbody hitBody)
-    {
-        print("Shot Enemy!");
-        animator.enabled = false;
-        foreach (GameObject obj in ragdollParts)
-        {
-            obj.GetComponent<Rigidbody>().isKinematic = false;
-            obj.GetComponent<Rigidbody>().velocity = new Vector3(0,0,0);
-        }
-        hitBody.AddForce(BulletImpactForce * MuzzlePointTransform.forward, ForceMode.Impulse);
-
-
-    }
     private void Start()
     {
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
         targetPos = transform.position;
-        reactionTime = 2-difficulty;
+        reactionTime = 2 - difficulty;
+    }
 
+    private void Update()
+    {
+        if (ragdoll) return;
+
+        HandleChallengeValue();
+        SetAnimations();
+        SetAnimationSpeeds();
+        HandleMovement();
+
+        switch (behaviour)
+        {
+            case Behaviour.Formality:
+                HandleFormality();
+                break;
+
+            case Behaviour.Standoff:
+                HandleStandoff();
+                break;
+
+            case Behaviour.Dueling:
+                HandleDueling();
+                break;
+        }
+    }
+
+    public void Shot(float bulletImpactForce, Transform muzzlePoint, RaycastHit hit, Rigidbody hitBody)
+    {
+        if (behaviour != Behaviour.Dueling) return;
+        VRUtils.Instance.PlaySpatialClipAt(fleshHitSound, transform.position, 0.75f);
+        print("Shot Enemy!");
+        animator.enabled = false;
+        spawn.Endround();
+        ActivateRagdoll();
+        hitBody.AddForce(bulletImpactForce * muzzlePoint.forward, ForceMode.Impulse);
+        ragdoll = true;
+    }
+
+    private void HandleChallengeValue()
+    {
+        if (challengeValue > 0 &&!challenged)
+        {
+            challengeValue -= 0.5f * Time.deltaTime;
+            challenged = challengeValue > 3;
+        }
     }
 
     private void SetAnimations()
@@ -79,169 +115,165 @@ public class CowboyEnemy : MonoBehaviour
         animator.SetBool("Walking", walking);
         animator.SetInteger("WalkState", walkState);
     }
-
-    float extraRotationSpeed = 1000;
-
-    void extraRotation()
+    bool canAttack;
+    private void SetAnimationSpeeds()
     {
-        Vector3 lookrotation = agent.steeringTarget - transform.position;
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookrotation), extraRotationSpeed * Time.deltaTime);
-
-    }
-    void SetAnimationSpeeds()
-    {
-
         stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-        if (stateInfo.IsName("Quickdraw") && state ==2)
-        {
-            print("Drawing Gun!");
-            animator.speed = difficulty;
-            
-        }
-        else
-        {
-            animator.speed = 1;
-        }
-        
-        
+        animator.speed = (stateInfo.IsName("Quickdraw") && state == 2) ? difficulty : 1;
+        canAttack = stateInfo.IsName("Fulldraw_Idle");
     }
-    public bool counted;
-    private void Update()
+
+    private void HandleMovement()
     {
-        //extraRotation();
+        walking = Vector3.Distance(transform.position, agent.destination) > agent.stoppingDistance + distanceTolerance;
 
-        if(challengeValue > 0)
-        {
-            challengeValue -= 0.5f * Time.deltaTime;
-            if(challengeValue > 3)
-            {
-                challenged = true;
-            }
-        }
-        
-
-        SetAnimations();
-        SetAnimationSpeeds();
-        if (Vector3.Distance(transform.position, agent.destination) > agent.stoppingDistance + distanceTolerance)
-        {
-            walking = true;
-        }
-        else
-        {
-            walking = false;
-        }
         if (Vector3.Distance(transform.position, agent.destination) <= walkingDistance)
         {
             walkState = 1;
             agent.speed = walkspeed;
         }
-        else if (Vector3.Distance(transform.position, agent.destination) > walkingDistance)
+        else
         {
             walkState = 2;
             agent.speed = sprintSpeed;
         }
-        switch (behaviour)
+    }
+
+    private void HandleFormality()
+    {
+        if (!challenged)
         {
-            case Behaviour.Formality:
+            state = 0;
+            agent.destination = targetPos;
+        }
+        else if (!shookHands)
+        {
+            PrepareForHandshake();
+        }
+        else
+        {
+            ProceedToEnemySpot();
+        }
+    }
 
+    bool playedSound;
+    private void PrepareForHandshake()
+    {
+        animator.SetBool("Challenged", true);
+        agent.destination = shakeSpot.position;
+        if(playedSound == false)
+        {
+            VRUtils.Instance.PlaySpatialClipAt(AngrySound, transform.position, 0.75f);
+            playedSound = true;
+        }
+        if (Vector3.Distance(transform.position, shakeSpot.position) < agent.stoppingDistance + 0.1f)
+        {
+            animator.SetBool("Inshakepos", true);
+            RotateTowards(player.transform);
+            canShakeHands = true;
+        }
+    }
 
-                if (!challenged)
+    private void ProceedToEnemySpot()
+    {
+        animator.SetBool("Shook", true);
+        agent.destination = enemySpot.position;
+
+        if (Vector3.Distance(transform.position, enemySpot.position) < distanceTolerance)
+        {
+            RotateTowards(player.transform);
+        }
+
+        if (Vector3.Distance(transform.position, enemySpot.position) < agent.stoppingDistance + distanceTolerance &&
+            Vector3.Distance(player.transform.position, playerSpot.position) < 1f)
+        {
+            spawn.StartCountdown();
+            print("Started countdown");
+            spawn.cowboyEnemy = this;
+            behaviour = Behaviour.Standoff;
+        }
+    }
+
+    private void HandleStandoff()
+    {
+        state = 1;
+        
+        if (Vector3.Distance(transform.position, agent.destination) < distanceTolerance)
+        {
+            if (counted)
+            {
+                reactionTime -= Time.deltaTime;
+                if (reactionTime <= 0)
                 {
-                    state = 0;
-                    agent.destination = targetPos;
-                    
-
-                    
+                    behaviour = Behaviour.Dueling;
                 }
+            }
 
-                if (challenged && !shookHands)
-                {
-                    animator.SetBool("Challenged", true);
-                    agent.destination = shakeSpot.transform.position;
+            RotateTowards(player.transform);
+        }
+    }
 
-                    if (Vector3.Distance(transform.position, shakeSpot.transform.position) < agent.stoppingDistance + 0.1f)
-                    {
-                        animator.SetBool("Inshakepos", true);
+    private void HandleDueling()
+    {
+        state = 2;
+        weapon.SetActive(true);
+        RotateTowards(player.transform);
+        Attack();
+    }
 
-                        // Only rotate left or right to face the player object (Y-axis rotation only)
-                        Vector3 direction = player.transform.position - transform.position;
-                        direction.y = 0;  // Ignore the Y-axis to avoid tilting forward or backward
+    float maxDelay = 2;
+    float delay;
+    float mindelay = 0;
+    void Attack()
+    {
+        if (canAttack)
+        {
+            delay -= Time.deltaTime;
+            if (delay <= mindelay)
+            {
+                VRUtils.Instance.PlaySpatialClipAt(GunShotSound, transform.position, 0.75f);
+                shotRoutine = doMuzzleFlash();
+                StartCoroutine(shotRoutine);
+                delay = maxDelay;
+            }
+        }
+    }
 
-                        // Check if direction vector is non-zero to avoid errors with Quaternion.LookRotation
-                        if (direction != Vector3.zero)
-                        {
-                            Quaternion targetRotation = Quaternion.LookRotation(direction);
-                            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10);
-                        }
-                    }
+    protected virtual IEnumerator doMuzzleFlash()
+    {
+        muzzleflash.SetActive(true);
+        yield return new WaitForSeconds(0.05f);
 
-                    // Look at player when standing near the shakespot
-                }
+        randomizeMuzzleFlashScaleRotation();
+        yield return new WaitForSeconds(0.05f);
 
-                if (challenged && shookHands)
-                {
-                    animator.SetBool("Shook", true);
-                    agent.destination = enemySpot.position;
-                    if(Vector3.Distance(transform.position, agent.destination)< distanceTolerance)
-                    {
-                        Vector3 direction = player.transform.position - transform.position;
-                        direction.y = 0;  // Ignore the Y-axis to avoid tilting forward or backward
+        muzzleflash.SetActive(false);
+    }
+    void randomizeMuzzleFlashScaleRotation()
+    {
+        muzzleflash.transform.localScale = Vector3.one * Random.Range(0.75f, 1.5f) *10;
+        muzzleflash.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 90f));
+    }
+    IEnumerator shotRoutine;
+    private void RotateTowards(Transform target)
+    {
+        Vector3 direction = target.position - transform.position;
+        direction.y = 0;
 
-                        // Check if direction vector is non-zero to avoid errors with Quaternion.LookRotation
-                        if (direction != Vector3.zero)
-                        {
-                            Quaternion targetRotation = Quaternion.LookRotation(direction);
-                            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10);
-                        }
-                    }
-                    if (Vector3.Distance(transform.position, enemySpot.position) < agent.stoppingDistance + distanceTolerance && Vector3.Distance(player.transform.position, playerSpot.position) < 3f)
-                    {
-                        spawn.StartCountdown();
-                        print("started countdown");
-                        spawn.cowboyEnemy = this;
-                        behaviour = Behaviour.Standoff;
+        if (direction != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10);
+        }
+    }
 
-
-                    }
-                }
-
-                break;
-            case Behaviour.Standoff:
-                state = 1;
-                if(Vector3.Distance(transform.position, agent.destination)< distanceTolerance)
-                {
-                    if(counted == true)
-                    {
-                        reactionTime -= 1 * Time.deltaTime;
-                        if(reactionTime <= 0)
-                        {
-                            behaviour = Behaviour.Dueling;
-                        }
-                        
-                    }
-                    Vector3 direction2 = player.transform.position - transform.position;
-                    direction2.y = 0;  // Ignore the Y-axis to avoid tilting forward or backward
-
-                    // Check if direction vector is non-zero to avoid errors with Quaternion.LookRotation
-                    if (direction2 != Vector3.zero)
-                    {
-                        Quaternion targetRotation = Quaternion.LookRotation(direction2);
-                        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10);
-                    }
-                }
-                break;
-            case Behaviour.Dueling:
-                state = 2;
-                Vector3 direction3 = player.transform.position - transform.position;
-                direction3.y = 0;  // Ignore the Y-axis to avoid tilting forward or backward
-
-                // Check if direction vector is non-zero to avoid errors with Quaternion.LookRotation
-                if (direction3 != Vector3.zero)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(direction3);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10);
-                }
-                break;
+    private void ActivateRagdoll()
+    {
+        foreach (GameObject obj in ragdollParts)
+        {
+            var rb = obj.GetComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.velocity = Vector3.zero;
         }
     }
 }

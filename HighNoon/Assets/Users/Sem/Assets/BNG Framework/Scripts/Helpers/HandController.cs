@@ -176,7 +176,7 @@ namespace BNG {
                     if (enemy != null)
                     {
                         // Increase the challenged value by 1f per second
-                        enemy.challengeValue += Time.deltaTime;
+                        enemy.challengeValue += 2f*Time.deltaTime;
                     }
                 }
             }

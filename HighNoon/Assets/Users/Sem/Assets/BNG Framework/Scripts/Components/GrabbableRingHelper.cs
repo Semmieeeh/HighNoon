@@ -18,7 +18,6 @@ namespace BNG {
             // Set up Ring
             if (RingOnValidPickup) {
                 RingHelper rh = GetComponentInChildren<RingHelper>();
-                Debug.LogError("Found ringhelper");
                 if (rh == null) {
                     GameObject go = Instantiate(Resources.Load("RingHelper", typeof(GameObject))) as GameObject;
                     go.transform.SetParent(this.transform, false);

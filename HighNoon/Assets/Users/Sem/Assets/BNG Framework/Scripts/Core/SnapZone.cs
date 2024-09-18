@@ -248,6 +248,10 @@ namespace BNG {
             // Mark as kinematic so it doesn't fall down
             if (heldItemRigid) {
                 heldItemWasKinematic = heldItemRigid.isKinematic;
+                if(HeldItem.TryGetComponent<Revolver>(out Revolver rev))
+                {
+                    rev.inHolster = true;
+                }
                 heldItemRigid.isKinematic = true;
             }
             else {
@@ -395,6 +399,10 @@ namespace BNG {
         public virtual void ReleaseAll() {
 
             // No need to keep checking
+            if (HeldItem.TryGetComponent<Revolver>(out Revolver rev))
+            {
+                rev.inHolster = false;
+            }
             if (HeldItem == null) {
                 return;
             }

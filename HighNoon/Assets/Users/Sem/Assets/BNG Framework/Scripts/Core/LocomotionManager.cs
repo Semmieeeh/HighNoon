@@ -98,13 +98,13 @@ namespace BNG {
         }
 
         public void ChangeLocomotion(LocomotionType locomotionType, bool save) {
-            ChangeLocomotionType(locomotionType);
+            //ChangeLocomotionType(locomotionType);
 
-            if (save) {
-                PlayerPrefs.SetInt("LocomotionSelection", locomotionType == LocomotionType.Teleport ? 0 : 1);
-            }
+            //if (save) {
+            //    PlayerPrefs.SetInt("LocomotionSelection", locomotionType == LocomotionType.Teleport ? 0 : 1);
+            //}
 
-            UpdateTeleportStatus();
+            //UpdateTeleportStatus();
         }
 
         public void ChangeLocomotionType(LocomotionType loc) {
@@ -120,7 +120,7 @@ namespace BNG {
                 teleport = GetComponentInChildren<PlayerTeleport>();
             }
 
-            toggleTeleport(selectedLocomotion == LocomotionType.Teleport);
+            //toggleTeleport(selectedLocomotion == LocomotionType.Teleport);
             toggleSmoothLocomotion(selectedLocomotion == LocomotionType.SmoothLocomotion);
         }
 
