@@ -60,7 +60,7 @@ public class CowboyEnemy : MonoBehaviour
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
         targetPos = transform.position;
-        reactionTime = 10 - difficulty;
+        reactionTime = 2 - difficulty;
     }
 
     private void Update()
@@ -202,8 +202,11 @@ public class CowboyEnemy : MonoBehaviour
         {
             if (counted)
             {
-                behaviour = Behaviour.Dueling;
-                
+                reactionTime -= Time.deltaTime;
+                if (reactionTime <= 0)
+                {
+                    behaviour = Behaviour.Dueling;
+                }
             }
 
             RotateTowards(player.transform);
@@ -212,14 +215,10 @@ public class CowboyEnemy : MonoBehaviour
 
     private void HandleDueling()
     {
-        reactionTime -= Time.deltaTime;
-        if (reactionTime <= 0)
-        {
-            state = 2;
-            weapon.SetActive(true);
-            RotateTowards(player.transform);
-            Attack();
-        }
+        state = 2;
+        weapon.SetActive(true);
+        RotateTowards(player.transform);
+        Attack();
     }
 
     float maxDelay = 2;

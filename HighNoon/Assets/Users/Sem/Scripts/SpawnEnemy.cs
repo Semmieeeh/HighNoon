@@ -42,7 +42,7 @@ public class SpawnEnemy : MonoBehaviour
     {
         inCombat = true;
         manager.revolver.GetComponent<Revolver>().canShoot = false;
-        yield return new WaitForSeconds(Random.Range(5,15));
+        yield return new WaitForSeconds(10);
         manager.revolver.GetComponent<Revolver>().canShoot = true;
         if (counted == false)
         {
