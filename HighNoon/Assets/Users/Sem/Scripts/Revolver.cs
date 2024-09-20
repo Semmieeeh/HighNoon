@@ -11,7 +11,6 @@ namespace BNG
 
         [Header("General : ")]
         public LineRenderer tracer;
-        public BulletTrail trail;
         public bool inHolster;
         public bool canShoot;
         public bool shoot;
@@ -519,7 +518,6 @@ namespace BNG
             invoked = false;
         }
         bool invoked;
-        public Transform TrailEnd;
         public virtual void Shoot()
         {
             ObjectToRotate.localEulerAngles = OriginalEulers;
@@ -571,10 +569,6 @@ namespace BNG
                 if (Physics.Raycast(MuzzlePointTransform.position, MuzzlePointTransform.forward, out hit, MaxRange, ValidLayers, QueryTriggerInteraction.Ignore))
                 {
                     OnRaycastHit(hit);
-                }
-                else
-                {
-                    trail.FireBullet(TrailEnd.position);
                 }
 
             }
@@ -644,7 +638,6 @@ namespace BNG
         {
 
             ApplyParticleFX(hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal), hit.collider);
-            trail.FireBullet(hit.point);
             
             // Traverse up the hierarchy to find the topmost parent
             Transform current = hit.transform;
