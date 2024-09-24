@@ -159,7 +159,7 @@ namespace BNG {
         void CheckForChallenge()
         {
             // Check if Grip, Point, and Thumb amounts match the condition
-            if (GripAmount == 1 && PointAmount == 1 && ThumbAmount == 0)
+            if (GripAmount == 1)
             {
                 // Perform raycast in the direction of the finger's forward vector
                 if (Physics.Raycast(finger.transform.position, finger.transform.forward, out RaycastHit hit, 10))

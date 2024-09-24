@@ -1,6 +1,7 @@
 using BNG;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SpawnEnemy : MonoBehaviour
@@ -51,12 +52,27 @@ public class SpawnEnemy : MonoBehaviour
             cowboyEnemy.counted = true;
             counted = true;
         }
-
+        
 
     }
     private void Update()
     {
-
+        if(cowboyEnemy.ragdoll == true)
+        {
+            cowboyEnemy.Die();
+            Vector3 enemyPos = new Vector3(5, -1, 0);
+            Quaternion spawnRotation = Quaternion.Euler(0, -90, 0);
+            manager = GameObject.Find("PlayerRig").GetComponent<RevolverManager>();
+            GameObject e = Instantiate(enemy, enemyPos, spawnRotation);
+            CowboyEnemy f = e.GetComponent<CowboyEnemy>();
+            cowboyEnemy = f;
+            f.spawn = this;
+            f.playerSpot = playerspot;
+            f.player = GameObject.Find("Player");
+            f.shakeSpot = shake;
+            f.enemySpot = enemySpot;
+            StopAllCoroutines();
+        }
         
     }
 

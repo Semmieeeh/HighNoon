@@ -56,6 +56,14 @@ public class CowboyEnemy : MonoBehaviour
     public bool counted;
     public bool canShakeHands;
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Player")
+        {
+            challenged = true;
+        }
+;
+    }
     private void Start()
     {
         behaviour = Behaviour.Formality;
@@ -63,9 +71,22 @@ public class CowboyEnemy : MonoBehaviour
         targetPos = transform.position;
         reactionTime = 2 - difficulty;
     }
-
+    float deathtime = 10;
+    bool dead;
+    public void Die()
+    {
+        dead = true;
+    }
     private void Update()
     {
+        if(dead == true)
+        {
+            deathtime -= Time.deltaTime;
+            if(deathtime <= 0)
+            {
+                Destroy(gameObject);
+            }
+        }
         if (ragdoll) return;
 
         HandleChallengeValue();
