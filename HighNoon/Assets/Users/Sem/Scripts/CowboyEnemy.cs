@@ -15,14 +15,15 @@ public class CowboyEnemy : MonoBehaviour
     public AudioClip AngrySound;
     public AudioClip walkingSound;
     public AudioClip fleshHitSound;
-
+    public BulletTrail trail;
+    public Transform muzzle;
     [Header("Animation")]
     public Animator animator;
     public int state;
     private AnimatorStateInfo stateInfo;
     private bool walking;
     private int walkState; // 0 = stand still, 1 = walk, 2 = run
-    
+
     [Header("Navigation")]
     public Transform enemySpot;
     public Transform shakeSpot;
@@ -55,16 +56,37 @@ public class CowboyEnemy : MonoBehaviour
     public bool counted;
     public bool canShakeHands;
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Player")
+        {
+            challenged = true;
+        }
+;
+    }
     private void Start()
     {
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
         targetPos = transform.position;
-        reactionTime = 10 - difficulty;
+        reactionTime = 2 - difficulty;
     }
-
+    float deathtime = 10;
+    bool dead;
+    public void Die()
+    {
+        dead = true;
+    }
     private void Update()
     {
+        if(dead == true)
+        {
+            deathtime -= Time.deltaTime;
+            if(deathtime <= 0)
+            {
+                Destroy(gameObject);
+            }
+        }
         if (ragdoll) return;
 
         HandleChallengeValue();
@@ -102,7 +124,7 @@ public class CowboyEnemy : MonoBehaviour
 
     private void HandleChallengeValue()
     {
-        if (challengeValue > 0 &&!challenged)
+        if (challengeValue > 0 && !challenged)
         {
             challengeValue -= 0.5f * Time.deltaTime;
             challenged = challengeValue > 3;
@@ -161,7 +183,7 @@ public class CowboyEnemy : MonoBehaviour
     {
         animator.SetBool("Challenged", true);
         agent.destination = shakeSpot.position;
-        if(playedSound == false)
+        if (playedSound == false)
         {
             VRUtils.Instance.PlaySpatialClipAt(AngrySound, transform.position, 0.75f);
             playedSound = true;
@@ -197,13 +219,13 @@ public class CowboyEnemy : MonoBehaviour
     private void HandleStandoff()
     {
         state = 1;
-        
+
         if (Vector3.Distance(transform.position, agent.destination) < distanceTolerance)
         {
             if (counted)
             {
                 behaviour = Behaviour.Dueling;
-                
+
             }
 
             RotateTowards(player.transform);
@@ -225,6 +247,12 @@ public class CowboyEnemy : MonoBehaviour
     float maxDelay = 2;
     float delay;
     float mindelay = 0;
+    public float spreadRadiusx;
+    public float spreadRadiusy;
+    public float spreadRadiusz;
+    private Ray lastRay;
+    bool didHit;
+    RaycastHit lastHit;
     void Attack()
     {
         if (canAttack)
@@ -233,9 +261,74 @@ public class CowboyEnemy : MonoBehaviour
             if (delay <= mindelay)
             {
                 VRUtils.Instance.PlaySpatialClipAt(GunShotSound, transform.position, 0.75f);
+
+                // Capture muzzle position and forward vector to prevent changes during the shot
+                Vector3 muzzlePosition = muzzle.position;
+                Vector3 muzzleForward = muzzle.forward;
+
+                Debug.Log("Muzzle position: " + muzzlePosition); // For debugging
+
+                // Calculate direction towards the player from the muzzle
+                Vector3 directionToPlayer = (player.transform.position - muzzlePosition).normalized;
+
+                // Add random spread to the shooting direction
+                Vector3 spread = new Vector3(
+                    Random.Range(-spreadRadiusx, spreadRadiusx),
+                    Random.Range(-spreadRadiusy, spreadRadiusy),
+                    Random.Range(-spreadRadiusz, spreadRadiusz)
+                );
+
+                // Apply spread to the shooting direction
+                Vector3 shootDirection = directionToPlayer;// + spread;
+
+                // Store the ray for visualization
+                lastRay = new Ray(muzzlePosition, shootDirection);
+
+                // Perform raycast and store result for Gizmos
+                didHit = Physics.Raycast(lastRay, out lastHit);
+
+                if (didHit)
+                {
+                    // Fire bullet towards hit point
+                    trail.FireBullet(lastHit.point);
+                    Debug.Log("Hit " + lastHit.collider.name);
+                }
+                else
+                {
+                    // Fire bullet towards a far point if it missed
+                    trail.FireBullet(muzzlePosition + shootDirection * 1000f);
+                    Debug.Log("Missed");
+                }
+
+                // Play muzzle flash effect
                 shotRoutine = doMuzzleFlash();
                 StartCoroutine(shotRoutine);
+
+                // Reset the delay for the next shot
                 delay = maxDelay;
+            }
+        }
+    }
+
+
+    private void OnDrawGizmos()
+    {
+        if (lastRay.origin != Vector3.zero)
+        {
+            // Set Gizmo color for ray
+            Gizmos.color = Color.red;
+
+            if (didHit)
+            {
+                // Draw ray up to the point of impact
+                Gizmos.DrawLine(lastRay.origin, lastHit.point);
+                // Draw a small sphere at the point of impact
+                Gizmos.DrawSphere(lastHit.point, 0.1f);
+            }
+            else
+            {
+                // Draw ray extending far if no hit
+                Gizmos.DrawLine(lastRay.origin, lastRay.origin + lastRay.direction * 100f);
             }
         }
     }
@@ -252,7 +345,7 @@ public class CowboyEnemy : MonoBehaviour
     }
     void randomizeMuzzleFlashScaleRotation()
     {
-        muzzleflash.transform.localScale = Vector3.one * Random.Range(0.75f, 1.5f) *10;
+        muzzleflash.transform.localScale = Vector3.one * Random.Range(0.75f, 1.5f) * 10;
         muzzleflash.transform.localEulerAngles = new Vector3(0, 0, Random.Range(0, 90f));
     }
     IEnumerator shotRoutine;

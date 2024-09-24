@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 namespace BNG {
-    public class SnapZone : MonoBehaviour {
+    public class SnapZone : GrabbableEvents {
 
         [Header("Starting / Held Item")]
         [Tooltip("The currently held item. Set this in the editor to equip on Start().")]
@@ -114,9 +114,31 @@ namespace BNG {
                 GrabGrabbable(HeldItem);
             }
         }
-
+        public List<GrabbedControllerBinding> EjectInput = new List<GrabbedControllerBinding>() { GrabbedControllerBinding.Button2Down };
         void Update() {
-
+            for (int x = 0; x < EjectInput.Count; x++)
+            {
+                if(StartingItem.TryGetComponent<Revolver>(out Revolver rev))
+                {
+                    if(rev.inHolster == false)
+                    {
+                        if (StartingItem.GetComponent<Grabbable>().BeingHeld == false)
+                        {
+                            if (InputBridge.Instance.GetGrabbedControllerBinding(EjectInput[x], thisGrabber.HandSide))
+                            {
+                                print("holding button!");
+                                if (StartingItem != null)
+                                {
+                                    StartingItem.transform.position = transform.position;
+                                    GrabGrabbable(StartingItem);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    
+                }
+            }
             ClosestGrabbable = getClosestGrabbable();
 
             // Can we grab something
