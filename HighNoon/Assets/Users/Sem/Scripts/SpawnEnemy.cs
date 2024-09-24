@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class SpawnEnemy : MonoBehaviour
 {
+    public float standoffTime;
     public GameObject enemy;
     public Transform enemySpawnPos;
     public Transform enemySpot;
@@ -42,7 +43,7 @@ public class SpawnEnemy : MonoBehaviour
     {
         inCombat = true;
         manager.revolver.GetComponent<Revolver>().canShoot = false;
-        yield return new WaitForSeconds(Random.Range(5,15));
+        yield return new WaitForSeconds(Random.Range(standoffTime, standoffTime));
         manager.revolver.GetComponent<Revolver>().canShoot = true;
         if (counted == false)
         {

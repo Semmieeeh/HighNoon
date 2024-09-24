@@ -71,7 +71,7 @@ namespace BNG {
 
             // Holding shotgun, pistol, or rifle
             string grabName = g.HeldGrabbable.transform.name;
-            if (grabName.Contains("Shotgun") || grabName.Contains("Pistol") || grabName.Contains("Rifle")) {
+            if (grabName.Contains("Shotgun") || grabName.Contains("Revolver") || grabName.Contains("Rifle")) {
                 return true;
             }
 
@@ -104,11 +104,11 @@ namespace BNG {
             }
 
             // Pistol
-            if (leftGrabberValid && LeftGrabber.HeldGrabbable.transform.name.Contains("Pistol") && CurrentPistolClips > 0) {
+            if (leftGrabberValid && LeftGrabber.HeldGrabbable.transform.name.Contains("Revolver") && CurrentPistolClips > 0) {
                 CurrentPistolClips--;
                 return PistolClip;
             }
-            else if (rightGrabberValid && RightGrabber.HeldGrabbable.transform.name.Contains("Pistol") && CurrentPistolClips > 0) {
+            else if (rightGrabberValid && RightGrabber.HeldGrabbable.transform.name.Contains("Revolver") && CurrentPistolClips > 0) {
                 CurrentPistolClips--;
                 return PistolClip;
             }
