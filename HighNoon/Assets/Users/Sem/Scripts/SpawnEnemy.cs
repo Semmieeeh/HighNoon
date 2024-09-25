@@ -1,7 +1,6 @@
 using BNG;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class SpawnEnemy : MonoBehaviour
@@ -38,11 +37,10 @@ public class SpawnEnemy : MonoBehaviour
     public void StartCountdown()
     {
         StartCoroutine(nameof(StartCountdownRoutine));
+        counted = false;
     }
-    bool inCombat;
     public IEnumerator StartCountdownRoutine()
     {
-        inCombat = true;
         manager.revolver.GetComponent<Revolver>().canShoot = false;
         yield return new WaitForSeconds(Random.Range(standoffTime, standoffTime));
         manager.revolver.GetComponent<Revolver>().canShoot = true;
@@ -78,7 +76,6 @@ public class SpawnEnemy : MonoBehaviour
 
     public void Endround()
     {
-        inCombat = false;
         manager.revolver.GetComponent<Revolver>().canShoot = true;
         manager.revolver.GetComponent<Revolver>().shotBeforeBell = false;
 

@@ -52,15 +52,14 @@ public class CowboyEnemy : MonoBehaviour
     }
     public Behaviour behaviour;
 
-    private float extraRotationSpeed = 1000;
     public bool counted;
     public bool canShakeHands;
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Player")
+        if (other.tag == "PlayerHands")
         {
-            challenged = true;
+            challengeValue += 1 * Time.deltaTime;
         }
 ;
     }

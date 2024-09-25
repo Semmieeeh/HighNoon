@@ -142,7 +142,6 @@ namespace BNG
 
         [Tooltip("How fast to move back the slide on fire. Default : 1")]
         public float slideSpeed = 1;
-        float minSlideDistance = 0.001f;
         [Header("Inputs : ")]
         [Tooltip("Controller Input used to eject clip")]
         public List<GrabbedControllerBinding> EjectInput = new List<GrabbedControllerBinding>() { GrabbedControllerBinding.Button2Down };
