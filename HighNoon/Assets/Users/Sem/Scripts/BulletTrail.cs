@@ -12,6 +12,7 @@ public class BulletTrail : MonoBehaviour
     public void FireBullet(Vector3 target)
     {
         // Start a coroutine to draw the trail
+        StopAllCoroutines();
         StartCoroutine(DrawBulletTrail(muzzlePoint.position, target));
     }
 

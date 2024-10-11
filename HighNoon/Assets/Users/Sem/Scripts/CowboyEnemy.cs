@@ -117,7 +117,7 @@ public class CowboyEnemy : MonoBehaviour
         animator.enabled = false;
         spawn.Endround();
         ActivateRagdoll();
-        hitBody.AddForce(bulletImpactForce * muzzlePoint.forward, ForceMode.Impulse);
+        hitBody.AddForce(bulletImpactForce * -muzzlePoint.forward, ForceMode.Impulse);
         ragdoll = true;
     }
 
@@ -263,22 +263,20 @@ public class CowboyEnemy : MonoBehaviour
 
                 // Capture muzzle position and forward vector to prevent changes during the shot
                 Vector3 muzzlePosition = muzzle.position;
-                Vector3 muzzleForward = muzzle.forward;
-
                 Debug.Log("Muzzle position: " + muzzlePosition); // For debugging
 
                 // Calculate direction towards the player from the muzzle
                 Vector3 directionToPlayer = (player.transform.position - muzzlePosition).normalized;
-
+                
                 // Add random spread to the shooting direction
                 Vector3 spread = new Vector3(
                     Random.Range(-spreadRadiusx, spreadRadiusx),
-                    Random.Range(-spreadRadiusy, spreadRadiusy),
+                    Random.Range(0, 0),
                     Random.Range(-spreadRadiusz, spreadRadiusz)
                 );
 
                 // Apply spread to the shooting direction
-                Vector3 shootDirection = directionToPlayer;// + spread;
+                Vector3 shootDirection = directionToPlayer + spread;
 
                 // Store the ray for visualization
                 lastRay = new Ray(muzzlePosition, shootDirection);
@@ -291,11 +289,15 @@ public class CowboyEnemy : MonoBehaviour
                     // Fire bullet towards hit point
                     trail.FireBullet(lastHit.point);
                     Debug.Log("Hit " + lastHit.collider.name);
+                    if(lastHit.collider.name == "Player")
+                    {
+                        lastHit.collider.gameObject.GetComponent<KillPlayer>().HandlePlayer();
+                    }
                 }
                 else
                 {
                     // Fire bullet towards a far point if it missed
-                    trail.FireBullet(muzzlePosition + shootDirection * 1000f);
+                    trail.FireBullet(shootDirection * 1000f);
                     Debug.Log("Missed");
                 }
 

@@ -218,8 +218,8 @@ namespace BNG
                     GameObject Bullet = Instantiate(bulletPrefab, chamber.transform.position, chamber.transform.rotation);
                     Bullet.GetComponent<CapsuleCollider>().enabled = false;
                     Bullet.transform.parent = chamber.transform;
-                    Vector3 newScale = new Vector3(0.1f, 0.105f, 0.1f);
-                    Bullet.transform.localScale = newScale;
+                    Vector3 newScale = new Vector3(0.1f, 0.1f, 0.13f);
+                    Bullet.transform.localScale = newScale *12;
                     bullets[i] = Bullet.gameObject.GetComponent<Bullet>(); i++;
                     Bullet.GetComponent<Bullet>().canBeLoaded = false;
                     Bullet.GetComponent<Grabbable>().enabled = false;
@@ -346,7 +346,7 @@ namespace BNG
                 }
                 
             }
-            else if( state == false && locked == false && EjectPointTransform.localEulerAngles.y < 20)
+            else if( state == false && locked == false && EjectPointTransform.localEulerAngles.z < 20)
             {
                 joint.gameObject.GetComponent<Rigidbody>().mass = 1f;
                 cylinderRb.mass = 0.1f;
@@ -377,8 +377,7 @@ namespace BNG
         bool playedInHolster;
         private void Update()
         {
-            
-            if(shoot == true)
+            if (shoot == true)
             {
                 Shoot();
                 shoot = false;
@@ -398,14 +397,14 @@ namespace BNG
             }
 
 
-            if (EjectPointTransform.localEulerAngles.y < 90)
+            if (EjectPointTransform.localEulerAngles.z < 90)
             {
-                rotation = EjectPointTransform.localEulerAngles.y;
+                rotation = EjectPointTransform.localEulerAngles.z;
 
             }
-            else if (EjectPointTransform.localEulerAngles.y > 90)
+            else if (EjectPointTransform.localEulerAngles.z > 90)
             {
-                rotation = EjectPointTransform.localEulerAngles.y- 360;
+                rotation = EjectPointTransform.localEulerAngles.z- 360;
             }
             //print(rotation);
             if (locked == false && rotation < -60)
@@ -419,7 +418,7 @@ namespace BNG
                     {
                         if (bullets[i].fired == true)
                         {
-                            Vector3 localBackward = new Vector3(0, -0.1f, 0);
+                            Vector3 localBackward = new Vector3(0, 0f, 0.1f);
                             Vector3 ejectDirection = bullets[i].transform.TransformDirection(localBackward);
                             Rigidbody rb = bullets[i].gameObject.GetComponent<Rigidbody>();
                             rb.isKinematic = false;
@@ -461,7 +460,7 @@ namespace BNG
 
             if (Hammer && didShoot == false)
             {
-                Hammer.localEulerAngles = new Vector3(triggerValue * -30, 0, 0);
+                Hammer.localEulerAngles = new Vector3(triggerValue * 30, 0, 0);
             }
             else
             {
@@ -480,7 +479,7 @@ namespace BNG
             if (ObjectToRotate && didShoot == false && locked)
             {
 
-                ObjectToRotate.localEulerAngles = new Vector3(OriginalEulers.x, OriginalEulers.y + triggerValue * 60, OriginalEulers.z);
+                ObjectToRotate.localEulerAngles = new Vector3(OriginalEulers.x, OriginalEulers.y , OriginalEulers.z + triggerValue * 60);
             }
             if(didShoot == true && locked)
             {
@@ -494,7 +493,7 @@ namespace BNG
 
                 // Immediately ready to keep firing if in automatic mode
                 readyToShoot = FiringMethod == FiringType.Automatic;
-                OriginalEulers = new Vector3(OriginalEulers.x, OriginalEulers.y + 60, OriginalEulers.z);
+                OriginalEulers = new Vector3(OriginalEulers.x, OriginalEulers.y, OriginalEulers.z +60);
                 didShoot = true;
                 //print(OriginalEulers);
                 
@@ -567,14 +566,16 @@ namespace BNG
                 b.fired = true;
                 isBulletFired[curChamber - 1] = b.fired;
                 // RotateChamber
-                if (Physics.Raycast(MuzzlePointTransform.position, MuzzlePointTransform.forward, out hit, MaxRange, ValidLayers, QueryTriggerInteraction.Ignore))
+                if (Physics.Raycast(MuzzlePointTransform.position, -MuzzlePointTransform.forward, out hit, MaxRange, ValidLayers, QueryTriggerInteraction.Ignore))
                 {
-                    OnRaycastHit(hit);
+                    OnRaycastHit(hit,b);
                 }
                 else
                 {
-                    trail.FireBullet(TrailEnd.position);
+                    trail.FireBullet(TrailEnd.transform.position);
                 }
+                
+                
 
             }
             else
@@ -639,12 +640,24 @@ namespace BNG
         }
 
         // Hit something without Raycast. Apply damage, apply FX, etc.
-        public virtual void OnRaycastHit(RaycastHit hit)
+        public virtual void OnRaycastHit(RaycastHit hit, Bullet previousBullet)
         {
 
             ApplyParticleFX(hit.point, Quaternion.FromToRotation(Vector3.forward, hit.normal), hit.collider);
             trail.FireBullet(hit.point);
             
+            UiObject obj = hit.transform.gameObject.GetComponent<UiObject>();
+            if(obj != null)
+            {
+                obj.DoFunction();
+                previousBullet.fired = false;
+            }
+
+            MainUi obj2 = hit.transform.gameObject.GetComponent<MainUi>();
+            if (obj2 != null)
+            {               
+                previousBullet.fired = false;
+            }
             // Traverse up the hierarchy to find the topmost parent
             Transform current = hit.transform;
             Rigidbody hitRigid = hit.collider.attachedRigidbody;
@@ -664,7 +677,7 @@ namespace BNG
             
             if (hitRigid != null)
             {
-                hitRigid.AddForceAtPosition(BulletImpactForce * MuzzlePointTransform.forward, hit.point);
+                hitRigid.AddForceAtPosition(BulletImpactForce * -MuzzlePointTransform.forward, hit.point);
             }
 
             // Damage if possible

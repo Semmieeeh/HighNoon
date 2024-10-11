@@ -14,9 +14,12 @@ public class SpawnEnemy : MonoBehaviour
     public Transform playerspot;
     public Transform shake;
     RevolverManager manager;
+    public float difficulty;
     bool canShoot;
 
-    void Start()
+
+
+    public void Initiate()
     {
         Vector3 enemyPos = new Vector3(5, -1, 0);
         Quaternion spawnRotation = Quaternion.Euler(0, -90, 0);
@@ -31,8 +34,6 @@ public class SpawnEnemy : MonoBehaviour
         f.enemySpot = enemySpot;
 
     }
-
-    // Update is called once per frame
     bool counted;
     public void StartCountdown()
     {
@@ -55,6 +56,10 @@ public class SpawnEnemy : MonoBehaviour
     }
     private void Update()
     {
+        if(cowboyEnemy == null)
+        {
+            return;
+        }
         if(cowboyEnemy.ragdoll == true)
         {
             cowboyEnemy.Die();

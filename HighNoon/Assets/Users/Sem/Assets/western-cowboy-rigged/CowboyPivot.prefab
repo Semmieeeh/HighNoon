@@ -504,7 +504,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   difficulty: 0.5
-  weapon: {fileID: 7560331455834888259}
+  weapon: {fileID: 279269141271715971}
   muzzleflash: {fileID: 1454633240635664265}
   player: {fileID: 0}
   GunShotSound: {fileID: 8300000, guid: 727ff3abbdb797f45b714a1795efc4e2, type: 3}
@@ -512,7 +512,7 @@ MonoBehaviour:
   walkingSound: {fileID: 8300000, guid: 450141ebd56cb4540b8f12cb0d6e7796, type: 3}
   fleshHitSound: {fileID: 8300000, guid: 4380671c78493284eb86dbb9f3eb6f26, type: 3}
   trail: {fileID: 7864017117539089335}
-  muzzle: {fileID: 6853318129395614775}
+  muzzle: {fileID: 8438537686235126315}
   animator: {fileID: 3903807125319559421}
   state: 0
   enemySpot: {fileID: 0}
@@ -523,7 +523,7 @@ MonoBehaviour:
   sprintSpeed: 3
   walkingDistance: 20
   distanceTolerance: 0.5
-  shookHands: 0
+  shookHands: 1
   ragdollParts:
   - {fileID: 1299267523835262923}
   - {fileID: 8984514637761807676}
@@ -537,7 +537,7 @@ MonoBehaviour:
   - {fileID: 7424293317564842657}
   - {fileID: 2493769404140048604}
   ragdoll: 0
-  challenged: 0
+  challenged: 1
   challengeValue: 0
   spawn: {fileID: 0}
   reactionTime: 0
@@ -5371,13 +5371,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3566565371072619856}
+  - component: {fileID: 3963665470182596467}
   m_Layer: 0
   m_Name: GunPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3566565371072619856
 Transform:
   m_ObjectHideFlags: 0
@@ -5386,14 +5387,29 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7560331455834888259}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.42436984, y: 0.44780338, z: 0.5422509, w: 0.5703915}
-  m_LocalPosition: {x: 0.121, y: 0.956, z: 0.165}
+  m_LocalRotation: {x: -0.42436972, y: 0.4478034, z: 0.5422509, w: 0.5703915}
+  m_LocalPosition: {x: 0.12100009, y: 0.956001, z: 0.16500102}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7682171555318964053}
   m_Father: {fileID: 6883152539367300574}
   m_LocalEulerAnglesHint: {x: -75.873, y: 11.969, z: 77.759}
+--- !u!114 &3963665470182596467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7560331455834888259}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4cd6efc1c18329408933292eeeb037a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  FollowTarget: {fileID: 4334419909322604403}
+  MatchRotation: 1
+  YOffset: 0
 --- !u!1 &7579451868899625681
 GameObject:
   m_ObjectHideFlags: 0
@@ -5544,6 +5560,7 @@ Transform:
   m_Children:
   - {fileID: 9037114520965677270}
   - {fileID: 203977769434273610}
+  - {fileID: 8438537686235126315}
   m_Father: {fileID: 2749428497031017080}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &3903807125319559421
@@ -5629,6 +5646,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5518222448893856329}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7765438438387275074
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8438537686235126315}
+  m_Layer: 0
+  m_Name: Muzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8438537686235126315
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7765438438387275074}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.7907, y: 5.9053, z: 4.224}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3402376806630345029}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7817292892718551719
 GameObject:
@@ -6894,7 +6942,7 @@ PrefabInstance:
         type: 3}
       propertyPath: muzzlePoint
       value: 
-      objectReference: {fileID: 2354284946488577521}
+      objectReference: {fileID: 8438537686235126315}
     - target: {fileID: 4007301411213951546, guid: 24725b34930379344b578b9e377cd182,
         type: 3}
       propertyPath: trailDuration

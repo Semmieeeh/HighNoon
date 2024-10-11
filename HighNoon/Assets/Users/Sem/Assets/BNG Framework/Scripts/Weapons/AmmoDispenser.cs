@@ -70,7 +70,7 @@ namespace BNG {
             }
 
             // Holding shotgun, pistol, or rifle
-            string grabName = g.HeldGrabbable.transform.name;
+            string grabName = g.HeldGrabbable.transform.name;   
             if (grabName.Contains("Shotgun") || grabName.Contains("Revolver") || grabName.Contains("Rifle")) {
                 return true;
             }
