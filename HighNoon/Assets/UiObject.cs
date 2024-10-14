@@ -44,7 +44,7 @@ public class UiObject : MonoBehaviour
         {
             case UiFunction.START:
 
-                ui.StartLoop();
+                ui.StartLoop(this);
                 break;
             case UiFunction.EDITDIFFICULTY:
 

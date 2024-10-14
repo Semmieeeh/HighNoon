@@ -20,7 +20,7 @@ public class MainUi : MonoBehaviour
         {
             foreach (TextMeshProUGUI text in obj.texts)
             {
-                text.text = "ARE YOU SURE?";
+                text.text = "YOU SURE?";
                 alreadyPressed = true;
             }
         }
@@ -78,13 +78,28 @@ public class MainUi : MonoBehaviour
         }
     }
     bool started;
-    public void StartLoop()
+    public void StartLoop(UiObject obj)
     {
         if(started == false)
         {
             spawn.Initiate();
+            foreach (TextMeshProUGUI text in obj.texts)
+            {
+                text.text = "CLOSE BAR";
+                print("Opened Bar");
+            }
         }
-        started = true;
+        else
+        {
+            foreach (TextMeshProUGUI text in obj.texts)
+            {
+                text.text = "OPEN BAR";
+                print("Closed Bar");
+            }
+            spawn.UnInitiate();
+            
+        }
+        started = !started;
     }
 
     IEnumerator CycleQuit(UiObject obj)

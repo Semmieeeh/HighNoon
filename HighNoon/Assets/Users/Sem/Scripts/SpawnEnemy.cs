@@ -36,6 +36,16 @@ public class SpawnEnemy : MonoBehaviour
         f.enemySpot = enemySpot;
 
     }
+    public void UnInitiate()
+    {
+        // Destroy the instantiated enemy game object
+        if (cowboyEnemy != null)
+        {
+            Destroy(cowboyEnemy.gameObject); // Destroy the enemy object
+            cowboyEnemy = null; // Reset the reference to null
+        }
+    }
+
     bool counted;
     public void StartCountdown()
     {
