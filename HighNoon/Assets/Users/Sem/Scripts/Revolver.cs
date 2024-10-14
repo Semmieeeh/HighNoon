@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem.HID;
 
 namespace BNG
 {
@@ -377,6 +378,7 @@ namespace BNG
         bool playedInHolster;
         private void Update()
         {
+            CheckForUi();
             if (shoot == true)
             {
                 Shoot();
@@ -640,6 +642,39 @@ namespace BNG
         }
 
         // Hit something without Raycast. Apply damage, apply FX, etc.
+        private Animator lastHitAnimator;
+
+        public void CheckForUi()
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(MuzzlePointTransform.position, -MuzzlePointTransform.forward, out hit, MaxRange, ValidLayers, QueryTriggerInteraction.Ignore))
+            {
+                if (hit.transform.gameObject.tag == "UI")
+                {
+                    Animator currentAnimator = hit.transform.gameObject.GetComponent<Animator>();
+
+                    // If the hit UI element is different from the last hit one
+                    if (lastHitAnimator != null && lastHitAnimator != currentAnimator)
+                    {
+                        lastHitAnimator.SetBool("Hit", false);
+                    }
+
+                    // Set "Hit" to true for the currently hit UI
+                    currentAnimator.SetBool("Hit", true);
+                    lastHitAnimator = currentAnimator;
+                }
+            }
+            else
+            {
+                // If nothing is hit, reset the last hit UI
+                if (lastHitAnimator != null)
+                {
+                    lastHitAnimator.SetBool("Hit", false);
+                    lastHitAnimator = null;
+                }
+            }
+        }
+
         public virtual void OnRaycastHit(RaycastHit hit, Bullet previousBullet)
         {
 

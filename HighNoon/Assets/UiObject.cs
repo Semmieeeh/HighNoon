@@ -14,6 +14,7 @@ public class UiObject : MonoBehaviour
     public GameObject mainUi;
     public TextMeshProUGUI[] texts;
     public bool dofunc;
+    public TextMeshProUGUI textToScale;
     public enum UiFunction
     {
         OPENVOLUME,

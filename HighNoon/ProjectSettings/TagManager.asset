@@ -6,6 +6,7 @@ TagManager:
   tags:
   - PlayerHands
   - Cylinder
+  - UI
   layers:
   - Default
   - TransparentFX

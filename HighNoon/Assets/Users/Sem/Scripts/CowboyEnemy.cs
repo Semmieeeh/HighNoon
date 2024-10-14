@@ -67,7 +67,6 @@ public class CowboyEnemy : MonoBehaviour
     {
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
-        targetPos = transform.position;
         reactionTime = 2 - difficulty;
     }
     float deathtime = 10;

@@ -20,7 +20,7 @@ public class MainUi : MonoBehaviour
         {
             foreach (TextMeshProUGUI text in obj.texts)
             {
-                text.text = "Are You Sure?";
+                text.text = "ARE YOU SURE?";
                 alreadyPressed = true;
             }
         }
@@ -28,8 +28,8 @@ public class MainUi : MonoBehaviour
         {
             Application.Quit();
         }
-        
-        Invoke("CycleQuit", 3f);
+
+        StartCoroutine(nameof(CycleQuit),obj);
         
         
     }
@@ -87,11 +87,12 @@ public class MainUi : MonoBehaviour
         started = true;
     }
 
-    void CycleQuit(UiObject obj)
+    IEnumerator CycleQuit(UiObject obj)
     {
+        yield return new WaitForSeconds(3);
         foreach (TextMeshProUGUI text in obj.texts)
         {
-            text.text = "Are You Sure";
+            text.text = "QUIT GAME";
         }
         alreadyPressed = false;
     }
