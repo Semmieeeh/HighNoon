@@ -41,9 +41,9 @@ namespace BNG
                         // Insert bullet into the closest available chamber
                         GameObject b = Instantiate(Weapon.bulletPrefab, closestChamber.transform.position, closestChamber.transform.rotation);
                         b.transform.parent = closestChamber.transform; // Parent to the chamber
-                        b.transform.localScale = new Vector3(0.1f * 12, 0.1f * 12, 0.13f * 12); // Adjust scale if needed
+                        b.transform.localScale = new Vector3(1.5f, 1.5f, 1.8f); // Adjust scale if needed
                         b.GetComponent<Bullet>().canBeLoaded = false;
-
+                        b.GetComponent<Rigidbody>().isKinematic = true;
                         Weapon.bullets[int.Parse(closestChamber.name) - 1] = b.gameObject.GetComponent<Bullet>();
                     }
 

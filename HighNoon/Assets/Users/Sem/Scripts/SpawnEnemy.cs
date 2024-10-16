@@ -8,6 +8,7 @@ public class SpawnEnemy : MonoBehaviour
     public float standoffTime;
     public GameObject enemy;
     public Transform enemySpawnPos;
+    public Transform barPos;
     public Transform enemySpot;
     public AudioSource aud;
     public CowboyEnemy cowboyEnemy;
@@ -27,7 +28,7 @@ public class SpawnEnemy : MonoBehaviour
         GameObject e = Instantiate(enemy, enemyPos, spawnRotation);
         CowboyEnemy f = e.GetComponent<CowboyEnemy>();
         cowboyEnemy = f;
-        f.targetPos = enemyPos;
+        f.targetPos = barPos.GetChild(Random.Range(0,2)).gameObject.transform.position;
         f.spawn = this;
         f.difficulty = difficulty;
         f.playerSpot = playerspot;

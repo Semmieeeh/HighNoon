@@ -184,11 +184,11 @@ namespace BNG
         
         void Start()
         {
+
             curChamber = minchamber;
             weaponRigid = GetComponent<Rigidbody>();
 
             RefillRevolver();
-            CheckChamber();
             OriginalEulers = ObjectToRotate.localEulerAngles;
             
 
@@ -217,21 +217,20 @@ namespace BNG
                 if (chamber.transform.childCount == 0)
                 {
                     GameObject Bullet = Instantiate(bulletPrefab, chamber.transform.position, chamber.transform.rotation);
+                    Bullet.GetComponent<Rigidbody>().isKinematic = true;
                     Bullet.GetComponent<CapsuleCollider>().enabled = false;
                     Bullet.transform.parent = chamber.transform;
-                    Vector3 newScale = new Vector3(0.1f, 0.1f, 0.13f);
-                    Bullet.transform.localScale = newScale *12;
                     bullets[i] = Bullet.gameObject.GetComponent<Bullet>(); i++;
                     Bullet.GetComponent<Bullet>().canBeLoaded = false;
                     Bullet.GetComponent<Grabbable>().enabled = false;
-                    
+
 
                 }
             }
         }
+        public GameObject closestChamber;
         void CheckChamber()
         {
-            GameObject closestChamber = null;  // Variable to store the closest chamber
             float closestDistance = Mathf.Infinity;  // Start with a very large number for comparison
 
             // Loop through each chamber
@@ -248,28 +247,6 @@ namespace BNG
                 }
             }
 
-            // Now 'closestChamber' will contain the chamber closest to 'topcheck'
-            if (closestChamber != null)
-            {
-                // Get the name of the closest chamber and convert it to an integer
-                int closestChamberNumber = int.Parse(closestChamber.name);
-
-                // Check if the closest chamber number is within the range of MinChamberCount and MaxChamberCount
-                if (closestChamberNumber >= minchamber && closestChamberNumber <= maxchamber)
-                {
-                    // Assign the closest chamber number to CurChamber
-                    curChamber = closestChamberNumber;
-                    Debug.Log("The closest chamber is: " + closestChamber.name + " (Chamber number: " + curChamber + ")");
-                }
-                else
-                {
-                    Debug.Log("Closest chamber is outside the allowed chamber range.");
-                }
-            }
-            else
-            {
-                Debug.Log("No chambers found!");
-            }
 
         }
         
@@ -378,6 +355,7 @@ namespace BNG
         bool playedInHolster;
         private void Update()
         {
+            CheckChamber();
             CheckForUi();
             if (shoot == true)
             {
@@ -452,8 +430,6 @@ namespace BNG
             
             // Sanitize for angles 
             triggerValue = Mathf.Clamp01(triggerValue);
-            Debug.LogWarning(triggerValue);
-
             // Update trigger graphics
             if (TriggerTransform)
             {
@@ -488,7 +464,7 @@ namespace BNG
                 ObjectToRotate.localEulerAngles = new Vector3(OriginalEulers.x, OriginalEulers.y, OriginalEulers.z);
             }
 
-
+            CheckChamber();
             if (readyToShoot && triggerValue >= 0.9f)
             {
                 Shoot();
@@ -504,7 +480,7 @@ namespace BNG
             // These are here for convenience. Could be called through GrabbableUnityEvents instead
             checkSlideInput();
             checkEjectInput();
-            CheckChamber();
+            
             updateChamberedBullet();
 
             base.OnTrigger(triggerValue);
@@ -522,99 +498,107 @@ namespace BNG
         public Transform TrailEnd;
         public virtual void Shoot()
         {
-            ObjectToRotate.localEulerAngles = OriginalEulers;
-            if (canShoot == false && inHolster == false)
+            // Check if there is a bullet in the chamber
+            if (closestChamber.transform.childCount == 0)
             {
-                if(invoked == false)
+                // No bullet found, play empty sound
+                VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
+                return;
+            }
+
+            // Retrieve the bullet object in the chamber
+            Bullet curBullet = closestChamber.transform.GetChild(0).GetComponent<Bullet>();
+
+            // If there's no bullet or it has been fired, play empty sound and return
+            if (curBullet == null || curBullet.fired)
+            {
+                VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
+                return;
+            }
+
+            // Reset object rotation to original euler angles
+            ObjectToRotate.localEulerAngles = OriginalEulers;
+
+            // Check if the gun is jammed or if shooting is allowed
+            if (!canShoot && !inHolster)
+            {
+                if (!invoked)
                 {
                     CancelInvoke();
-                    Invoke("UnJam", 10f);               
+                    Invoke("UnJam", 10f);  // Unjam the gun after 10 seconds
                     shotBeforeBell = true;
                     invoked = true;
                 }
-                VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
 
+                // Play empty sound because the gun is jammed
+                VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
                 return;
             }
-            if(shotBeforeBell == true)
+
+            // Prevent firing if shot was made before the bell
+            if (shotBeforeBell)
             {
                 VRUtils.Instance.PlaySpatialClipAt(EmptySound, transform.position, GunShotVolume);
                 return;
             }
-            CheckChamber();
-            // Has enough time passed between shots
-            Bullet b;
-            if (bullets[curChamber - 1]!=null)
-            {
-                b = bullets[curChamber - 1].gameObject.GetComponent<Bullet>();
-            }
-            else
-            {
-                return;
-            }
+
+            // Has enough time passed between shots (rate of fire check)
             float shotInterval = Time.timeScale < 1 ? SlowMoRateOfFire : FiringRate;
             if (Time.time - lastShotTime < shotInterval)
             {
                 return;
             }
 
-            //print(b.fired);
-            if (b.fired == false && locked == true)
+            // If the bullet hasn't been fired and the gun is locked, perform the shot
+            if (!curBullet.fired && locked)
             {
+                // Disable the bullet object and mark it as fired
+                curBullet.bulletObj.SetActive(false);
+                curBullet.fired = true;
 
-                // Raycast to hit
+                // Perform raycast for hit detection
                 RaycastHit hit;
-                b.bulletObj.SetActive(false);
-                b.fired = true;
-                isBulletFired[curChamber - 1] = b.fired;
-                // RotateChamber
                 if (Physics.Raycast(MuzzlePointTransform.position, -MuzzlePointTransform.forward, out hit, MaxRange, ValidLayers, QueryTriggerInteraction.Ignore))
                 {
-                    OnRaycastHit(hit,b);
+                    OnRaycastHit(hit, curBullet);
                 }
                 else
                 {
+                    // If no hit, fire bullet trail towards far point
                     trail.FireBullet(TrailEnd.transform.position);
                 }
-                
-                
-
             }
             else
             {
                 return;
             }
 
-
+            // Play the gunshot sound
             VRUtils.Instance.PlaySpatialClipAt(GunShotSound, transform.position, GunShotVolume);
 
-            // Haptics
+            // Haptics for controller vibration
             if (thisGrabber != null)
             {
                 input.VibrateController(0.1f, 0.2f, 0.1f, thisGrabber.HandSide);
             }
 
-            // Apply recoil
+            // Apply recoil effect
             ApplyRecoil();
 
-            
+            // Call shoot event
+            onShootEvent?.Invoke();
 
-            // Call Shoot Event
-            if (onShootEvent != null)
-            {
-                onShootEvent.Invoke();
-            }
-
-            // Store our last shot time to be used for rate of fire
+            // Store the time of the last shot for rate of fire management
             lastShotTime = Time.time;
 
-            // Stop previous routine
+            // Stop the previous muzzle flash routine
             if (shotRoutine != null)
             {
                 MuzzleFlashObject.SetActive(false);
                 StopCoroutine(shotRoutine);
             }
 
+            // Start the muzzle flash or auto-chamber animation
             if (AutoChamberRounds)
             {
                 shotRoutine = animateSlideAndEject();
@@ -626,6 +610,7 @@ namespace BNG
                 StartCoroutine(shotRoutine);
             }
         }
+
 
         // Apply recoil by requesting sprinyness and apply a local force to the muzzle point
         public virtual void ApplyRecoil()
