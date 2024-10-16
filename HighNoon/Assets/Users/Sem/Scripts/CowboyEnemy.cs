@@ -43,7 +43,7 @@ public class CowboyEnemy : MonoBehaviour
     public float challengeValue;
     public SpawnEnemy spawn;
     public float reactionTime;
-
+    public Transform t;
     public enum Behaviour
     {
         Formality,
@@ -63,11 +63,24 @@ public class CowboyEnemy : MonoBehaviour
         }
 ;
     }
+    private Vector3 roamTarget;
+    private float roamRadius = 2.0f;
+    private float roamTime = 3.0f; // Time to roam before selecting a new point
+    private float waitTime; // How long to wait at the roam target
+    private bool isWaiting;
+    private bool isLookingAround;
+    private float lookAroundTimer;
+    private Quaternion originalRotation;
     private void Start()
     {
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
         reactionTime = 2 - difficulty;
+        roamTarget = targetPos;  // Set initial roam target to the starting position
+        waitTime = 7f; // No initial wait
+        isWaiting = false;
+        isLookingAround = false;
+        originalRotation = transform.rotation;  // Store the original rotation for later
     }
     float deathtime = 10;
     bool dead;
@@ -159,12 +172,13 @@ public class CowboyEnemy : MonoBehaviour
         }
     }
 
+    // Updated HandleFormality method
     private void HandleFormality()
     {
         if (!challenged)
         {
             state = 0;
-            agent.destination = targetPos;
+            RoamAndLookAround();  // Roam when not challenged and look around
         }
         else if (!shookHands)
         {
@@ -175,6 +189,76 @@ public class CowboyEnemy : MonoBehaviour
             ProceedToEnemySpot();
         }
     }
+
+    // Roaming logic within a 3x3 radius around the targetPos
+    private void RoamAndLookAround()
+    {
+        if (isWaiting)
+        {
+            // Perform look around if waiting at a target
+            LookAround();
+            return;
+        }
+
+        // Check if we reached the destination
+        if (Vector3.Distance(transform.position, roamTarget) <= agent.stoppingDistance + distanceTolerance)
+        {
+            if (!isWaiting)
+            {
+                // Start waiting at the destination
+                waitTime = Random.Range(1.0f, 3.0f);  // Wait between 1 and 3 seconds
+                isWaiting = true;
+                isLookingAround = true;
+                lookAroundTimer = waitTime / 2;  // Look around for half the waiting time
+                originalRotation = transform.rotation;  // Store the current rotation
+                StartCoroutine(WaitBeforeMoving());  // Start the waiting coroutine
+            }
+        }
+        else
+        {
+            // Continue roaming
+            walkState = 1;  // Walking animation
+            agent.speed = walkspeed;
+            agent.destination = roamTarget;
+        }
+    }
+
+    private Vector3 GetRandomRoamingPoint()
+    {
+        Vector3 randomDirection = new Vector3(
+            Random.Range(-roamRadius, roamRadius),
+            0,
+            Random.Range(-roamRadius, roamRadius)
+        );
+        return targetPos + randomDirection;
+    }
+
+    private IEnumerator WaitBeforeMoving()
+    {
+        yield return new WaitForSeconds(waitTime);
+        roamTarget = GetRandomRoamingPoint();  // Get a new roam target
+        isWaiting = false;
+        isLookingAround = false;
+    }
+
+
+    private void LookAround()
+    {
+        // Look left and right during the idle time
+        if (lookAroundTimer > 0)
+        {
+            float lookAngle = Mathf.Sin(Time.time * 2.0f) * 30f;  // Oscillate angle between -30 and +30 degrees
+            Quaternion lookRotation = originalRotation * Quaternion.Euler(0, lookAngle, 0);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 2.0f);
+            lookAroundTimer -= Time.deltaTime;
+        }
+        else
+        {
+            // Reset to the original rotation after looking around
+            transform.rotation = Quaternion.Slerp(transform.rotation, originalRotation, Time.deltaTime * 2.0f);
+        }
+    }
+
 
     bool playedSound;
     private void PrepareForHandshake()

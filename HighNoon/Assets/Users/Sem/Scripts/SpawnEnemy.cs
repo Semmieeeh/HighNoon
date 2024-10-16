@@ -28,7 +28,8 @@ public class SpawnEnemy : MonoBehaviour
         GameObject e = Instantiate(enemy, enemyPos, spawnRotation);
         CowboyEnemy f = e.GetComponent<CowboyEnemy>();
         cowboyEnemy = f;
-        f.targetPos = barPos.GetChild(Random.Range(0,2)).gameObject.transform.position;
+        f.targetPos = barPos.position;
+        f.t = barPos;
         f.spawn = this;
         f.difficulty = difficulty;
         f.playerSpot = playerspot;
