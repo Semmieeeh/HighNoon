@@ -40,7 +40,7 @@ public class MainUi : MonoBehaviour
     }
     public void SetDifficulty(float difficulty)
     {
-        spawn.difficulty = difficulty;
+        spawn.SetDifficulty(difficulty);
     }
     public AudioMixer mixer;
     public void SetVolume(float value)

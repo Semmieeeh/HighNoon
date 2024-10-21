@@ -19,7 +19,7 @@ public class SpawnEnemy : MonoBehaviour
     bool canShoot;
 
 
-
+    public CowboyEnemy curEnemy;
     public void Initiate()
     {
         Vector3 enemyPos = new Vector3(5, -1, 0);
@@ -47,7 +47,13 @@ public class SpawnEnemy : MonoBehaviour
             cowboyEnemy = null; // Reset the reference to null
         }
     }
-
+    public void SetDifficulty(float difficulty)
+    {
+        if(cowboyEnemy != null)
+        {
+            cowboyEnemy.difficulty = difficulty;
+        }
+    }
     bool counted;
     public void StartCountdown()
     {
