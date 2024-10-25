@@ -76,6 +76,7 @@ public class CowboyEnemy : MonoBehaviour
         behaviour = Behaviour.Formality;
         agent = GetComponent<NavMeshAgent>();
         reactionTime = 2 - difficulty;
+        agent.stoppingDistance = 0.5f;
         roamTarget = targetPos;  // Set initial roam target to the starting position
         waitTime = 7f; // No initial wait
         isWaiting = false;
