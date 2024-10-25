@@ -525,7 +525,7 @@ MonoBehaviour:
   sprintSpeed: 3
   walkingDistance: 20
   distanceTolerance: 0.5
-  shookHands: 1
+  shookHands: 0
   ragdollParts:
   - {fileID: 1299267523835262923}
   - {fileID: 8984514637761807676}
@@ -539,7 +539,7 @@ MonoBehaviour:
   - {fileID: 7424293317564842657}
   - {fileID: 2493769404140048604}
   ragdoll: 0
-  challenged: 1
+  challenged: 0
   challengeValue: 0
   spawn: {fileID: 0}
   reactionTime: 0
