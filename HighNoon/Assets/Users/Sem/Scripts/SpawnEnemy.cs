@@ -31,7 +31,14 @@ public class SpawnEnemy : MonoBehaviour
         f.targetPos = barPos.position;
         f.t = barPos;
         f.spawn = this;
-        f.difficulty = difficulty;
+        if (difficulty == 0)
+        {
+            f.difficulty = 0.5f;
+        }
+        else
+        {
+            f.difficulty = difficulty;
+        }
         f.playerSpot = playerspot;
         f.player = GameObject.Find("Player");
         f.shakeSpot = shake;
@@ -60,8 +67,10 @@ public class SpawnEnemy : MonoBehaviour
         StartCoroutine(nameof(StartCountdownRoutine));
         counted = false;
     }
+    public GameObject weed;
     public IEnumerator StartCountdownRoutine()
     {
+        Instantiate(weed);
         manager.revolver.GetComponent<Revolver>().canShoot = false;
         yield return new WaitForSeconds(Random.Range(standoffTime, standoffTime));
         manager.revolver.GetComponent<Revolver>().canShoot = true;

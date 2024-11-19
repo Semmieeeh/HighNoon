@@ -543,6 +543,7 @@ MonoBehaviour:
   challengeValue: 0
   spawn: {fileID: 0}
   reactionTime: 0
+  t: {fileID: 0}
   behaviour: 0
   counted: 0
   canShakeHands: 0
